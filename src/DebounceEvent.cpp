@@ -82,6 +82,14 @@ unsigned char DebounceEvent::loop() {
             if (_mode == BUTTON_SWITCH) {
 
                 event = EVENT_CHANGED;
+                _event_start = millis();
+                _ready = true;
+                if (_reset_count) {
+                    _event_count = 1;
+                    _reset_count = false;
+                } else {
+                    ++_event_count;
+                }
 
             } else {
 
@@ -115,7 +123,12 @@ unsigned char DebounceEvent::loop() {
     if (_ready && (millis() - _event_start > _repeat)) {
         _ready = false;
         _reset_count = true;
-        event = EVENT_RELEASED;
+        if(_mode == BUTTON_SWITCH){
+            event = EVENT_SWITCH_FINISHED;
+        }else{
+            event = EVENT_RELEASED;
+        }
+        
     }
 
     if (event != EVENT_NONE) {

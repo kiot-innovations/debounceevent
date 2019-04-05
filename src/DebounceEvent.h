@@ -41,6 +41,7 @@
 #define EVENT_CHANGED           1
 #define EVENT_PRESSED           2
 #define EVENT_RELEASED          3
+#define EVENT_SWITCH_FINISHED   4
 
 class DebounceEvent {
 

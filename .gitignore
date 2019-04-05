@@ -10,3 +10,6 @@ docs/*
 
 # Credentials
 credentials.h
+
+#Vscode Folder
+.vscode/*
