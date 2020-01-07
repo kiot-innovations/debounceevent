@@ -53,6 +53,9 @@ class DebounceEvent {
         bool pressed() { return (_status != _defaultStatus); }
         unsigned long getEventLength() { return _event_length; }
         unsigned long getEventCount() { return _event_count; }
+        uint8_t getButtonPin() { return _pin; }
+        uint8_t getButtonMode() { return _mode; }
+        uint8_t getDefaultStatus() {return _defaultStatus; }
 
     private:
 
