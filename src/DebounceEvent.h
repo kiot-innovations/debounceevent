@@ -65,7 +65,7 @@ class DebounceEvent {
         bool _ready = false;
         bool _reset_count = true;
         unsigned long _event_start;
-        unsigned long _event_length;
+        unsigned long _event_length = 0;
         unsigned char _event_count = 0;
         uint8_t _defaultStatus;
         unsigned long _delay;
