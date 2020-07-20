@@ -138,3 +138,16 @@ unsigned char DebounceEvent::loop() {
     return event;
 
 }
+bool DebounceEvent::_debounceRead(uint8_t pin,uint8_t provider){
+    unsigned int ones = 0;
+    unsigned int zeroes = 0;
+    unsigned int debounceTime=5;
+    unsigned long start = millis();
+    while (millis() >= start && (millis() - start < debounceTime))
+    {
+        bool switch_status;
+        switch_status = (provider==BUTTON_PROVIDER_ESP)?digitalRead(pin):TCAioExt.readPin(pin);
+        switch_status ? ones++ : zeroes++;
+    }
+    return status ? ones > zeroes : zeroes > ones;
+}
