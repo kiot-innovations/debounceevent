@@ -42,13 +42,13 @@
 #define EVENT_PRESSED           2
 #define EVENT_RELEASED          3
 #define EVENT_SWITCH_FINISHED   4
-
+#define BUTTON_PROVIDER_ESP    0
+#define BUTTON_PROVIDER_TCA    1
 class DebounceEvent {
 
     public:
-
-        DebounceEvent(uint8_t pin, DEBOUNCE_EVENT_CALLBACK_SIGNATURE, uint8_t mode = BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH, unsigned long delay = DEBOUNCE_DELAY, unsigned long repeat = REPEAT_DELAY);
-        DebounceEvent(uint8_t pin, uint8_t mode = BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH, unsigned long delay = DEBOUNCE_DELAY, unsigned long repeat = REPEAT_DELAY);
+        DebounceEvent(uint8_t pin, DEBOUNCE_EVENT_CALLBACK_SIGNATURE, uint8_t mode = BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH, unsigned long delay = DEBOUNCE_DELAY, unsigned long repeat = REPEAT_DELAY, uint8_t pinProvider=BUTTON_PROVIDER_ESP);
+        DebounceEvent(uint8_t pin, uint8_t mode = BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH, unsigned long delay = DEBOUNCE_DELAY, unsigned long repeat = REPEAT_DELAY,uint8_t pinProvider=BUTTON_PROVIDER_ESP);
         unsigned char loop();
         bool pressed() { return (_status != _defaultStatus); }
         unsigned long getEventLength() { return _event_length; }
@@ -60,6 +60,7 @@ class DebounceEvent {
     private:
 
         uint8_t _pin;
+        uint8_t _provider;
         uint8_t _mode;
         bool _status;
         bool _ready = false;
@@ -73,6 +74,11 @@ class DebounceEvent {
         DEBOUNCE_EVENT_CALLBACK_SIGNATURE;
 
         void _init(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat);
+        void _init(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat , uint8_t provider);
+        bool _digitalRead(uint8_t pin,uint8_t provider);
+        bool _debounceRead(uint8_t pin,uint8_t provider);
+        void _pinMode(uint8_t pin,bool val,uint8_t provider);
+
 
 };
 

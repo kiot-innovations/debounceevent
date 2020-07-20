@@ -19,49 +19,107 @@
 
 */
 
+#define TCA_SUPPORT  1
+
+#define TCA6424A_OUTPUT             0
+#define TCA6424A_INPUT              1
+
+// #if TCA_SUPPORT ==  1
+#include<Wire.h>
+#include".\TCA6424.h"
+TCA6424A TCAioExt;
+// #endif
 #include <Arduino.h>
-#include "DebounceEvent.h"
+#include ".\DebounceEvent.h"
 
-DebounceEvent::DebounceEvent(uint8_t pin, DEBOUNCE_EVENT_CALLBACK_SIGNATURE, uint8_t mode, unsigned long delay, unsigned long repeat) {
+// DebounceEvent::DebounceEvent(uint8_t pin, DEBOUNCE_EVENT_CALLBACK_SIGNATURE, uint8_t mode, unsigned long delay, unsigned long repeat) {
+//     // this->callback = callback;
+//     // _init(pin, mode, delay, repeat);
+//     DebounceEvent(pin,DEBOUNCE_EVENT_CALLBACK_SIGNATURE,mode,delay,repeat,BUTTON_PROVIDER_ESP);
+// }
+
+DebounceEvent::DebounceEvent(uint8_t pin, DEBOUNCE_EVENT_CALLBACK_SIGNATURE, uint8_t mode, unsigned long delay, unsigned long repeat, uint8_t pinProvider) {
     this->callback = callback;
-    _init(pin, mode, delay, repeat);
+    _init(pin, mode, delay, repeat, pinProvider);
 }
 
-DebounceEvent::DebounceEvent(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat) {
+DebounceEvent::DebounceEvent(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat,uint8_t pinProvider) {
     this->callback = NULL;
-    _init(pin, mode, delay, repeat);
+    _init(pin, mode, delay, repeat,pinProvider);
 }
 
 
-void DebounceEvent::_init(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat) {
+// void DebounceEvent::_init(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat) {
 
+//     // store configuration
+//     _pin = pin;
+//     _mode = mode & 0x01;
+//     _defaultStatus = ((mode & BUTTON_DEFAULT_HIGH) > 0);
+//     _delay = delay;
+//     _repeat = repeat;
+
+//     // set up button
+//     #if ESP8266
+//     if (_pin == 16) {
+//         if (_defaultStatus) {
+//             pinMode(_pin, INPUT);
+//         } else {
+//             pinMode(_pin, INPUT_PULLDOWN_16);
+//         }
+//     } else {
+//     #endif // ESP8266
+//         if ((mode & BUTTON_SET_PULLUP) > 0) {
+//             pinMode(_pin, INPUT_PULLUP);
+//         } else {
+//             pinMode(_pin, INPUT);
+//         }
+//     #if ESP8266
+//     }
+//     #endif // ESP8266
+
+//     _status = (_mode == BUTTON_SWITCH) ? digitalRead(_pin) : _defaultStatus;
+
+// }
+// new init
+void DebounceEvent::_init(uint8_t pin, uint8_t mode, unsigned long delay, unsigned long repeat , uint8_t provider) {
+    Serial.println("in lib  seriously i am here init  ");
+    Serial.println(provider);
     // store configuration
+    uint8_t test=5;
+    
+    Serial.println("adjsdvjds  "+String(test));
+    (provider == BUTTON_PROVIDER_ESP)?(test=1):(test=0);
+    Serial.println("adjsdvjds  "+String(test));
     _pin = pin;
     _mode = mode & 0x01;
     _defaultStatus = ((mode & BUTTON_DEFAULT_HIGH) > 0);
     _delay = delay;
     _repeat = repeat;
-
+    _provider=provider;
     // set up button
     #if ESP8266
     if (_pin == 16) {
         if (_defaultStatus) {
-            pinMode(_pin, INPUT);
+            (provider == BUTTON_PROVIDER_ESP)?Serial.println("yaay its esp"):Serial.println("shitt its TCA");
+            _pinMode(_pin, INPUT,_provider);
         } else {
-            pinMode(_pin, INPUT_PULLDOWN_16);
+            (provider == BUTTON_PROVIDER_ESP)?Serial.println("yaay its esp"):Serial.println("shitt its TCA");
+            _pinMode(_pin, INPUT_PULLDOWN_16,_provider);
         }
     } else {
     #endif // ESP8266
         if ((mode & BUTTON_SET_PULLUP) > 0) {
-            pinMode(_pin, INPUT_PULLUP);
+            (provider == BUTTON_PROVIDER_ESP)?Serial.println("yaay its esp"):Serial.println("shitt its TCA");
+            _pinMode(_pin, INPUT_PULLUP,_provider);
         } else {
-            pinMode(_pin, INPUT);
+            (provider == BUTTON_PROVIDER_ESP)?Serial.println("yaay its esp"):Serial.println("shitt its TCA");
+            _pinMode(_pin, INPUT,_provider);
         }
     #if ESP8266
     }
     #endif // ESP8266
 
-    _status = (_mode == BUTTON_SWITCH) ? digitalRead(_pin) : _defaultStatus;
+    _status = (_mode == BUTTON_SWITCH) ? _digitalRead(_pin,_provider) : _defaultStatus;
 
 }
 
@@ -69,13 +127,13 @@ unsigned char DebounceEvent::loop() {
 
     unsigned char event = EVENT_NONE;
 
-    if (digitalRead(_pin) != _status) {
+    if (_digitalRead(_pin,_provider) != _status) {
 
         // Debounce
         unsigned long start = millis();
         while (millis() - start < _delay) delay(1);
 
-        if (digitalRead(_pin) != _status) {
+        if (_digitalRead(_pin,_provider) != _status) {
 
             _status = !_status;
 
@@ -137,6 +195,40 @@ unsigned char DebounceEvent::loop() {
 
     return event;
 
+}
+
+
+void DebounceEvent::_pinMode(uint8_t pin,bool val,uint8_t provider){
+    (provider == BUTTON_PROVIDER_ESP)?Serial.println("yaay its esp"):Serial.println("shitt its TCA");
+    
+    Serial.println("pinmode  prowider   "+String(provider));
+    if(provider == BUTTON_PROVIDER_ESP){
+        
+        Serial.println("esp setting direction");
+
+        Serial.println("hbfsj   " + String(BUTTON_PROVIDER_ESP));
+        pinMode(pin,val);
+    }
+    else if (provider == 1){
+        // #if TCA_SUPPORT ==  1
+        
+        TCAioExt.setPinDirection(pin,TCA6424A_INPUT);
+        Serial.println("io extender setting direction");
+        // delay(10000);
+        // #endif
+    }
+       
+}
+bool DebounceEvent::_digitalRead(uint8_t pin,uint8_t provider){
+    if(provider == BUTTON_PROVIDER_ESP){
+        return _debounceRead(pin);
+    }
+    else if (provider == BUTTON_PROVIDER_TCA){
+        // #if TCA_SUPPORT ==  1
+        // Serial.println("io extender digital read");
+        return TCAioExt.readPin(pin);
+        // #endif
+    }
 }
 bool DebounceEvent::_debounceRead(uint8_t pin,uint8_t provider){
     unsigned int ones = 0;
