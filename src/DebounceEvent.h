@@ -56,7 +56,7 @@ class DebounceEvent {
         uint8_t getButtonPin() { return _pin; }
         uint8_t getButtonMode() { return _mode; }
         uint8_t getDefaultStatus() {return _defaultStatus; }
-
+        bool _debounceRead(uint8_t pin);
     private:
 
         uint8_t _pin;

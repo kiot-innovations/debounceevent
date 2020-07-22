@@ -61,7 +61,7 @@ void DebounceEvent::_init(uint8_t pin, uint8_t mode, unsigned long delay, unsign
     }
     #endif // ESP8266
 
-    _status = (_mode == BUTTON_SWITCH) ? digitalRead(_pin) : _defaultStatus;
+    _status = (_mode == BUTTON_SWITCH) ? _debounceRead(_pin) : _defaultStatus;
 
 }
 
@@ -69,13 +69,13 @@ unsigned char DebounceEvent::loop() {
 
     unsigned char event = EVENT_NONE;
 
-    if (digitalRead(_pin) != _status) {
+    if (_debounceRead(_pin) != _status) {
 
         // Debounce
         unsigned long start = millis();
         while (millis() - start < _delay) delay(1);
 
-        if (digitalRead(_pin) != _status) {
+        if (_debounceRead(_pin) != _status) {
 
             _status = !_status;
 
@@ -137,4 +137,17 @@ unsigned char DebounceEvent::loop() {
 
     return event;
 
+}
+bool DebounceEvent::_debounceRead(uint8_t pin){
+    unsigned int ones = 0;
+    unsigned int zeroes = 0;
+    unsigned int debounceTime=7;
+    unsigned long start = millis();
+    while (millis() >= start && (millis() - start < debounceTime))
+    {
+        bool switch_status;
+        switch_status =digitalRead(pin);
+        switch_status ? ones++ : zeroes++;
+    }
+    return status ? ones > zeroes : zeroes > ones;
 }
