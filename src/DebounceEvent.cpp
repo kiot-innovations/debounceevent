@@ -156,7 +156,7 @@ bool DebounceEvent::_debounceRead(uint8_t pin, bool status, int delay){
         switch_status = digitalRead(pin);
         switch_status ? ones++ : zeroes++;
         
-        delayMicroSeconds(10); // To control the count (If we dont introduce this, then ones and zeros may explode)
+        delayMicroseconds(10); // To control the count (If we dont introduce this, then ones and zeros may explode)
     }
     bool lastStatus = digitalRead(pin);
     return status ? (ones > zeroes) & lastStatus : (zeroes > ones) & (!lastStatus);
