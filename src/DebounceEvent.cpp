@@ -61,21 +61,21 @@ void DebounceEvent::_init(uint8_t pin, uint8_t mode, unsigned long delay, unsign
     }
     #endif // ESP8266
 
-    _status = (_mode == BUTTON_SWITCH) ? _debounceRead(_pin) : _defaultStatus;
+    _status = (_mode == BUTTON_SWITCH) ? digitalRead(_pin) : _defaultStatus;
 
 }
 
 unsigned char DebounceEvent::loop() {
 
     unsigned char event = EVENT_NONE;
-
-    if (_debounceRead(_pin) != _status) {
+    uint8_t tempStatus = digitalRead(_pin);
+    if ( tempStatus != _status) {
 
         // Debounce
-        unsigned long start = millis();
-        while (millis() - start < _delay) delay(1);
+        // unsigned long start = millis();
+        // while (millis() - start < _delay) delay(1);
 
-        if (_debounceRead(_pin) != _status) {
+        if (_debounceRead(_pin, tempStatus, _delay)) {
 
             _status = !_status;
 
@@ -138,16 +138,26 @@ unsigned char DebounceEvent::loop() {
     return event;
 
 }
-bool DebounceEvent::_debounceRead(uint8_t pin){
+/**
+ * Takes pin to read
+ * Expected Status
+ * Debounce delay
+ * Returns true if expected status is same as calculated status over a period of time. 
+ * For calculation - it uses 2 things - 1. Number of High read versus low reads. And the last reading after the debounce time has passed.  
+ * */
+bool DebounceEvent::_debounceRead(uint8_t pin, bool status, int delay){
     unsigned int ones = 0;
     unsigned int zeroes = 0;
-    unsigned int debounceTime=7;
+    unsigned int debounceTime=delay;
     unsigned long start = millis();
     while (millis() >= start && (millis() - start < debounceTime))
     {
         bool switch_status;
-        switch_status =digitalRead(pin);
+        switch_status = digitalRead(pin);
         switch_status ? ones++ : zeroes++;
+        
+        delayMicroSeconds(10); // To control the count (If we dont introduce this, then ones and zeros may explode)
     }
-    return status ? ones > zeroes : zeroes > ones;
+    bool lastStatus = digitalRead(pin);
+    return status ? (ones > zeroes) & lastStatus : (zeroes > ones) & (!lastStatus);
 }
