@@ -145,6 +145,28 @@ unsigned char DebounceEvent::loop() {
  * Returns true if expected status is same as calculated status over a period of time. 
  * For calculation - it uses 2 things - 1. Number of High read versus low reads. And the last reading after the debounce time has passed.  
  * */
+#if BUTTON_DEBOUNCE_STRICT == 1
+bool DebounceEvent::_debounceRead(uint8_t pin, bool status, int delay){  // seems little dangerouse approach
+    unsigned int ones = 0;
+    unsigned int zeroes = 0;
+    unsigned int debounceTime=delay;
+    unsigned long start = millis();
+    while (millis() >= start && (millis() - start < debounceTime))
+    {
+        bool switch_status;
+        switch_status = digitalRead(pin);
+        switch_status ? ones++ : zeroes++;
+        
+        delayMicroseconds(10); // To control the count (If we dont introduce this, then ones and zeros may explode)
+    }
+    if(!status) {
+        if(ones==0) return 1;
+    }else {
+        if(zeroes==0) return 1;
+    }  
+    return 0;
+}
+#else
 bool DebounceEvent::_debounceRead(uint8_t pin, bool status, int delay){
     unsigned int ones = 0;
     unsigned int zeroes = 0;
@@ -161,3 +183,4 @@ bool DebounceEvent::_debounceRead(uint8_t pin, bool status, int delay){
     bool lastStatus = digitalRead(pin);
     return status ? (ones > zeroes) & lastStatus : (zeroes > ones) & (!lastStatus);
 }
+#endif
