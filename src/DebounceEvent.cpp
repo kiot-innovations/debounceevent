@@ -145,7 +145,7 @@ unsigned char DebounceEvent::loop() {
  * Returns true if expected status is same as calculated status over a period of time. 
  * For calculation - it uses 2 things - 1. Number of High read versus low reads. And the last reading after the debounce time has passed.  
  * */
-#if BUTTON_DEBOUNCE_STRICT == 1
+#if BUTTON_DEBOUNCE_STRICT == 1 // must be defined in default.h/hardware.h
 bool DebounceEvent::_debounceRead(uint8_t pin, bool status, int delay){  // seems little dangerouse approach
     unsigned int ones = 0;
     unsigned int zeroes = 0;
